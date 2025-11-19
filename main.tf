@@ -46,6 +46,7 @@ module "dashboard" {
   task_env_vars = var.dashboard_task_env_vars
   private_alb_sg_id = var.private_alb_sg_id
   public_alb_sg_id = var.public_alb_sg_id
+  enable_execute_command = var.enable_execute_command
 }
 
 
@@ -68,6 +69,7 @@ module "scheduler" {
   database_env_vars = var.database_env_vars
   task_env_vars = var.scheduler_task_env_vars
   private_alb_sg_id = var.private_alb_sg_id
+  enable_execute_command = var.enable_execute_command
 }
 
 module "renderer" {
@@ -86,6 +88,7 @@ module "renderer" {
   task_role_arn =  module.ecs.ecs_task_role.arn
   task_env_vars = var.renderer_task_env_vars
   private_alb_sg_id = var.private_alb_sg_id
+  enable_execute_command = var.enable_execute_command
 }
 
 module "pirana" {
@@ -104,4 +107,5 @@ module "pirana" {
   task_role_arn =  module.ecs.ecs_task_role.arn
   task_env_vars = var.pirana_task_env_vars
   private_alb_sg_id = var.private_alb_sg_id
+  enable_execute_command = var.enable_execute_command
 }

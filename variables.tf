@@ -7,6 +7,11 @@ variable "container_insights_setting" {
   type = string
   default = "disabled"
 }
+
+variable "enable_execute_command" {
+  type = bool
+}
+
 variable "application_subnet_ids" {
   type = list(string)
 }

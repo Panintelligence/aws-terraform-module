@@ -77,6 +77,7 @@ resource "aws_ecs_service" "scheduler" {
   desired_count = 1
   launch_type = "FARGATE"
   platform_version = "1.4.0"
+  enable_execute_command = var.enable_execute_command
 
   lifecycle {
     ignore_changes = [desired_count]

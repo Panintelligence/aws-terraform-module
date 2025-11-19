@@ -48,6 +48,7 @@ module "public_alb" {
   name    = "${local.deployment_name}-public"
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.public_subnets
+  enable_deletion_protection = false
 
   # Security Group
   security_group_ingress_rules = {
@@ -125,6 +126,8 @@ module "private_alb" {
   name    = "${local.deployment_name}-private"
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.private_subnets
+  internal = true
+  enable_deletion_protection = false
 
   # Security Group
   security_group_ingress_rules = {
@@ -154,13 +157,27 @@ module "private_alb" {
   }
 
   route53_records = {
-    A = {
+    dashboard = {
       name    = "dashboard"
       type    = "A"
       zone_id = aws_route53_zone.local.zone_id
+    },
+    scheduler = {
+      name    = "scheduler"
+      type    = "A"
+      zone_id = aws_route53_zone.local.zone_id
+    },
+    renderer = {
+      name    = "renderer"
+      type    = "A"
+      zone_id = aws_route53_zone.local.zone_id
+    },
+    pirana = {
+      name    = "pirana"
+      type    = "A"
+      zone_id = aws_route53_zone.local.zone_id
     }
-
- }
+  }
 }
 
 ##### REPOSITORY DATABASE #######
@@ -221,6 +238,7 @@ module "rds-aurora" {
 module "pi" {
   source = "../../"
   application_subnet_ids = module.vpc.private_subnets
+  enable_execute_command = true
   dashboard_alb_listener_external_arn = module.public_alb.listeners["https"].arn
   dashboard_alb_listener_internal_arn = module.private_alb.listeners["http"].arn
   dashboard_private_domain = local.dashboard_private_domain

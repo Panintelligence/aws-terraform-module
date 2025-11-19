@@ -154,6 +154,7 @@ resource "aws_cloudwatch_log_group" "dashboard" {
 }
 
 
+
 resource "aws_ecs_service" "dashboard" {
   name = "dashboard"
   cluster = var.aws_ecs_cluster_id
@@ -162,6 +163,7 @@ resource "aws_ecs_service" "dashboard" {
   launch_type = "FARGATE"
   platform_version = "1.4.0"
   health_check_grace_period_seconds = 80
+  enable_execute_command = var.enable_execute_command
 
   lifecycle {
     ignore_changes = [desired_count]

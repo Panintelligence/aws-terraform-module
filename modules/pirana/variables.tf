@@ -42,3 +42,7 @@ variable "docker_image" {
 variable "private_alb_sg_id" {
   type = string
 }
+
+variable "enable_execute_command" {
+  type = bool
+}

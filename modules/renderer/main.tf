@@ -54,6 +54,7 @@ resource "aws_cloudwatch_log_group" "renderer" {
   name = "/aws/ecs/${var.deployment_name}-renderer"
 }
 
+
 resource "aws_ecs_service" "renderer" {
   name = "renderer"
   cluster = var.aws_ecs_cluster_id
@@ -61,6 +62,7 @@ resource "aws_ecs_service" "renderer" {
   desired_count = 1
   launch_type = "FARGATE"
   platform_version = "1.4.0"
+  enable_execute_command = var.enable_execute_command
 
   lifecycle {
     ignore_changes = [desired_count]
