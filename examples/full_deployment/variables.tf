@@ -1,9 +1,9 @@
 variable "domain_name" {
-  default = "poc.panintelligence-sandbox.cloud"
+  type = string
 }
 
 variable "private_domain_name" {
-  default = "poc.panintelligence-sandbox.local"
+  type = string
 }
 
 variable "deployment_name" {
@@ -12,4 +12,6 @@ variable "deployment_name" {
 
 variable "licence" {}
 
-variable "docker_secret_arn" {}
+variable "docker_secret_arn" {
+  type = string
+}
