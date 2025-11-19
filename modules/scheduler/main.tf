@@ -151,3 +151,13 @@ resource "aws_vpc_security_group_ingress_rule" "efs" {
   referenced_security_group_id = aws_security_group.scheduler.id
 
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "scheduler_private_alb" {
+  security_group_id = aws_security_group.scheduler.id
+  description       = "Allow traffic from private ALB"
+  ip_protocol       = "tcp"
+  from_port         = 9917
+  to_port           = 9917
+  referenced_security_group_id = var.private_alb_sg_id
+}

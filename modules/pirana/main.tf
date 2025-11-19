@@ -124,3 +124,13 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "pirana_alb" {
+  security_group_id = aws_security_group.pirana.id
+  description       = "Allow traffic from private ALB"
+  ip_protocol       = "tcp"
+  from_port         = 9918
+  to_port           = 9918
+  referenced_security_group_id = var.private_alb_sg_id
+}

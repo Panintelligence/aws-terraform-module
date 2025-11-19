@@ -11,4 +11,12 @@ terraform {
 
 provider "aws" {
   region = "eu-west-1"
+
+  default_tags {
+    tags = {
+      Environment = "poc"
+      Service     = local.deployment_name
+      Terraform   = true
+    }
+  }
 }

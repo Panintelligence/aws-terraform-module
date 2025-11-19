@@ -125,3 +125,13 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "renderer_private_alb" {
+  security_group_id = aws_security_group.renderer.id
+  description       = "Allow traffic from private ALB"
+  ip_protocol       = "tcp"
+  from_port         = 9915
+  to_port           = 9915
+  referenced_security_group_id = var.private_alb_sg_id
+}

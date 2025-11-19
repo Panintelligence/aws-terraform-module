@@ -11,3 +11,5 @@ variable "deployment_name" {
 }
 
 variable "licence" {}
+
+variable "docker_secret_arn" {}

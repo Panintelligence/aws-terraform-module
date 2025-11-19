@@ -2,6 +2,7 @@ variable "deployment_name" {
   type = string
   default = "panintelligence"
 }
+
 variable "container_insights_setting" {
   type = string
   default = "disabled"
@@ -61,4 +62,75 @@ variable "private_alb_sg_id" {
 }
 variable "public_alb_sg_id" {
   type = string
+}
+
+
+
+variable "scheduler_alb_listener_arn" {
+  type = string
+}
+variable "scheduler_cpu" {
+  default = 256
+}
+variable "scheduler_image" {
+  default = "ghcr.io/pi-cr/scheduler:2025_10.1"
+}
+variable "scheduler_memory" {
+  default = 512
+}
+variable "scheduler_private_domain" {
+  type = string
+}
+variable "scheduler_sec_group_ids" {
+  default = []
+}
+variable "scheduler_task_env_vars" {
+  type = any
+}
+
+
+variable "renderer_alb_listener_arn" {
+  type = string
+}
+
+variable "renderer_cpu" {
+  default = 1024
+}
+variable "renderer_image" {
+  default = "ghcr.io/pi-cr/renderer:2025_10.1"
+}
+variable "renderer_memory" {
+  default = 2048
+}
+variable "renderer_private_domain" {
+  type = string
+}
+variable "renderer_sec_group_ids" {
+  default = []
+}
+variable "renderer_task_env_vars" {
+  default = {}
+}
+
+
+variable "pirana_alb_listener_arn" {
+  type =string
+}
+variable "pirana_cpu" {
+  default = 1024
+}
+variable "pirana_image" {
+  default = "ghcr.io/pi-cr/pirana:2025_10.1"
+}
+variable "pirana_memory" {
+  default = 2048
+}
+variable "pirana_private_domain" {
+  type = string
+}
+variable "pirana_sec_group_ids" {
+  default = []
+}
+variable "pirana_task_env_vars" {
+  default = {}
 }

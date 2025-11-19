@@ -39,3 +39,6 @@ variable "task_env_vars" {
 variable "docker_image" {
   type = string
 }
+variable "private_alb_sg_id" {
+  type = string
+}
