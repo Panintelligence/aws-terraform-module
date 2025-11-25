@@ -9,3 +9,7 @@ variable "container_insights_setting" {
 variable "docker_hub_secrets_arn" {
   type = string
 }
+
+variable "enable_execute_command" {
+  type = bool
+}

@@ -1,16 +1,17 @@
 data "aws_iam_policy_document" "ecs_assume_role_policy" {
-  statement  {
-      actions = ["sts:AssumeRole"]
-      principals {
-        type = "Service"
-        identifiers = ["ecs-tasks.amazonaws.com"]
-      }
-      effect = "Allow"
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
+    effect = "Allow"
+  }
 }
 
 data "aws_iam_policy_document" "ecs_task_policy" {
-  statement  {
+  count = var.enable_execute_command ? 1 : 0
+  statement {
     actions = [
       "ssmmessages:CreateControlChannel",
       "ssmmessages:CreateDataChannel",
@@ -18,13 +19,14 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "ssmmessages:OpenDataChannel"
     ]
     resources = ["*"]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 
 
 data "aws_iam_policy_document" "ecs_task_execution_policy" {
-  statement  {
+  count = var.docker_hub_secrets_arn != null ? 1 : 0
+  statement {
     actions = [
       "secretsmanager:ListSecretVersionIds",
       "secretsmanager:GetSecretValue",
@@ -32,7 +34,7 @@ data "aws_iam_policy_document" "ecs_task_execution_policy" {
       "secretsmanager:DescribeSecret"
     ]
     resources = [var.docker_hub_secrets_arn]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 
@@ -48,21 +50,21 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy_attachment"
 }
 
 resource "aws_iam_policy" "ecs_task_execution_policy" {
+  count       = var.docker_hub_secrets_arn != null ? 1 : 0
   name        = "${var.deployment_name}-ecs-execution-policy-secrets"
   description = "Allow read of docker secret in secrets manager"
-  policy = data.aws_iam_policy_document.ecs_task_execution_policy.json
+  policy      = data.aws_iam_policy_document.ecs_task_execution_policy[0].json
 }
 
-#TODO: make this optional if secret needed
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_get_secret" {
-  policy_arn = aws_iam_policy.ecs_task_execution_policy.arn
+  count      = var.docker_hub_secrets_arn != null ? 1 : 0
+  policy_arn = aws_iam_policy.ecs_task_execution_policy[0].arn
   role       = aws_iam_role.ecs_execution_role.name
 }
 
+
+
 ## ECS TASK ROLE allows ecs exec if enabled
-
-#TODO: make this a variable
-
 resource "aws_iam_role" "ecs_task_role" {
   name               = "${var.deployment_name}-ecs-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role_policy.json
@@ -70,13 +72,15 @@ resource "aws_iam_role" "ecs_task_role" {
 
 
 resource "aws_iam_policy" "ecs_task_policy" {
+  count       = var.enable_execute_command ? 1 : 0
   name        = "${var.deployment_name}-ecs_task_policy"
   description = "Allow exec into your containers"
-  policy = data.aws_iam_policy_document.ecs_task_policy.json
+  policy      = data.aws_iam_policy_document.ecs_task_policy[0].json
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_role_policy_attachment" {
-  policy_arn = aws_iam_policy.ecs_task_policy.arn
+  count      = var.enable_execute_command ? 1 : 0
+  policy_arn = aws_iam_policy.ecs_task_policy[0].arn
   role       = aws_iam_role.ecs_task_role.name
 }
 

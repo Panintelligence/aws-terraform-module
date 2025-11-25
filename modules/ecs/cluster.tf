@@ -2,7 +2,7 @@
 resource "aws_ecs_cluster" "pi" {
   name = var.deployment_name
   setting {
-    name = "containerInsights"
+    name  = "containerInsights"
     value = var.container_insights_setting
   }
 

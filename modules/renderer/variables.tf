@@ -6,7 +6,7 @@ variable "application_subnet_ids" {
   type = list(string)
 }
 variable "renderer_sec_group_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -14,7 +14,8 @@ variable "renderer_cpu" {
   type = number
 }
 variable "docker_hub_secrets_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "renderer_memory" {
   type = number

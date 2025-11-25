@@ -5,14 +5,15 @@ variable "application_subnet_ids" {
   type = list(string)
 }
 variable "scheduler_sec_groups_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "scheduler_cpu" {
   type = number
 }
 variable "docker_hub_secrets_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "scheduler_memory" {
   type = number

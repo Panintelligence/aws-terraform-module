@@ -20,7 +20,8 @@ variable "docker_image" {
   type = string
 }
 variable "docker_hub_secrets_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "aws_ecs_cluster_id" {
   type = string
@@ -29,7 +30,7 @@ variable "application_subnet_ids" {
   type = list(string)
 }
 variable "dashboard_sec_groups_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "alb_listener_external_arn" {

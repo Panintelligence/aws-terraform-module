@@ -2,7 +2,7 @@ variable "deployment_name" {
   type = string
 }
 variable "pirana_sec_group_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "application_subnet_ids" {
@@ -12,7 +12,8 @@ variable "pirana_cpu" {
   type = number
 }
 variable "docker_hub_secrets_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "pirana_memory" {
   type = number

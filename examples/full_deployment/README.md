@@ -1,16 +1,26 @@
-Export your aws credentials (admin access)
-optional - set a remote backend
+# How to run this example
 
-create a secret in secretsmanager containing docker credentials (username and password/token)
-set a valid licence for the panintelligence software
+## Set variables
 
-Create a verified route53 hosted zone or delegated zone for the public domain to reach your instance. Set this as the variable "domain_name" 
-e.g panintelligence.yourcompany.com
+In the variables.tf file, set:
+- "domain_name" a verified route53 hosted zone or delegated zone for the public domain to reach your instance
+- "private_domain_name" any valid domain name, does not need to be registered
+- "deployment_name" to name your resources, or leave as is
+- "licence" A valid licence for the software
+- "docker_secret_arn" A secrets manager secret to authenticate to the repository hosting the images, containing username and password/token
 
-Choose a domain name for the private networking. This doesn't need verification
-e.g. panintelligence.yourcompany.local
+## Review the provider
 
-Run:
-terraform init
-terraform plan
-terraform apply
+You can change the aws region and tags applied to all resources in the aws provider in the versions.tf file
+
+## How to deploy
+
+The network should be deployed first to avoid a terraform error
+
+- Export your aws credentials (admin access)
+- terraform init
+- terraform plan -target=module.vpc
+- terraform apply -target=module.vpc
+- terraform plan
+- terraform apply
+

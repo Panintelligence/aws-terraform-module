@@ -1,17 +1,19 @@
 variable "domain_name" {
-  type = string
+  default = "yourdomain.com"
 }
 
 variable "private_domain_name" {
-  type = string
+  default = "yourdomain.local"
 }
 
 variable "deployment_name" {
   default = "panintelligence"
 }
 
-variable "licence" {}
+variable "licence" {
+  default = ""
+}
 
 variable "docker_secret_arn" {
-  type = string
+  default = ""
 }

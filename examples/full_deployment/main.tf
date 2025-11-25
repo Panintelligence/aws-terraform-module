@@ -16,7 +16,7 @@ data "aws_route53_zone" "this" {
 #### NETWORK ####
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "5.21.0"
 
   name = "${local.deployment_name}-vpc"
@@ -42,12 +42,12 @@ module "acm" {
 ### EXTERNAL LOAD BALANCER #####'
 
 module "public_alb" {
-  source = "terraform-aws-modules/alb/aws"
+  source  = "terraform-aws-modules/alb/aws"
   version = "9.11.0"
 
-  name    = "${local.deployment_name}-public"
-  vpc_id  = module.vpc.vpc_id
-  subnets = module.vpc.public_subnets
+  name                       = "${local.deployment_name}-public"
+  vpc_id                     = module.vpc.vpc_id
+  subnets                    = module.vpc.public_subnets
   enable_deletion_protection = false
 
   # Security Group
@@ -105,7 +105,7 @@ module "public_alb" {
       zone_id = data.aws_route53_zone.this.id
     }
 
- }
+  }
 }
 
 #### INTERNAL LOAD BALANCER #####
@@ -120,13 +120,13 @@ resource "aws_route53_zone" "local" {
 
 
 module "private_alb" {
-  source = "terraform-aws-modules/alb/aws"
+  source  = "terraform-aws-modules/alb/aws"
   version = "9.11.0"
 
-  name    = "${local.deployment_name}-private"
-  vpc_id  = module.vpc.vpc_id
-  subnets = module.vpc.private_subnets
-  internal = true
+  name                       = "${local.deployment_name}-private"
+  vpc_id                     = module.vpc.vpc_id
+  subnets                    = module.vpc.private_subnets
+  internal                   = true
   enable_deletion_protection = false
 
   # Security Group
@@ -146,8 +146,8 @@ module "private_alb" {
 
   listeners = {
     http = {
-      port            = 80
-      protocol        = "HTTP"
+      port     = 80
+      protocol = "HTTP"
       fixed_response = {
         content_type = "text/plain"
         message_body = "Something went wrong"
@@ -183,11 +183,11 @@ module "private_alb" {
 ##### REPOSITORY DATABASE #######
 
 module "rds-aurora" {
-  source = "terraform-aws-modules/rds-aurora/aws"
+  source  = "terraform-aws-modules/rds-aurora/aws"
   version = "9.11.0"
 
-  name = local.deployment_name
-  engine = "aurora-mysql"
+  name           = local.deployment_name
+  engine         = "aurora-mysql"
   engine_version = "8.0"
 
   master_username = "panintelligence"
@@ -197,12 +197,12 @@ module "rds-aurora" {
 
   instances = {
     1 = {
-      instance_class = "db.t3.medium"
+      instance_class      = "db.t3.medium"
       publicly_accessible = true
     }
   }
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id               = module.vpc.vpc_id
   db_subnet_group_name = module.vpc.database_subnet_group_name
 
 
@@ -236,30 +236,31 @@ module "rds-aurora" {
 #### PANINTELLIGENCE CLUSTER ####
 
 module "pi" {
-  source = "../../"
-  application_subnet_ids = module.vpc.private_subnets
-  enable_execute_command = true
+  source                              = "../../"
+  application_subnet_ids              = module.vpc.private_subnets
+  enable_execute_command              = true
+  efs_backup_force_destroy            = true
   dashboard_alb_listener_external_arn = module.public_alb.listeners["https"].arn
   dashboard_alb_listener_internal_arn = module.private_alb.listeners["http"].arn
-  dashboard_private_domain = local.dashboard_private_domain
-  dashboard_public_domain = local.dashboard_public_domain
+  dashboard_private_domain            = local.dashboard_private_domain
+  dashboard_public_domain             = local.dashboard_public_domain
   dashboard_task_env_vars = {
-    PI_EXTERNAL_DB = "true"
-    PI_TOMCAT_MAX_MEMORY = "1024"
-    PI_LICENCE = var.licence
-    PI_TOMCAT_COOKIE_SECURE = "true"
+    PI_EXTERNAL_DB            = "true"
+    PI_TOMCAT_MAX_MEMORY      = "1024"
+    PI_LICENCE                = var.licence
+    PI_TOMCAT_COOKIE_SECURE   = "true"
     PI_TOMCAT_COOKIE_SAMESITE = "none"
-    RENDERER_DASHBOARD_URL = "http://${local.dashboard_private_domain}/pi"
-    PAN_RENDERER_URL = "http://${local.renderer_private_domain}"
-    PAN_SCHEDULER_URL = "http://${local.scheduler_private_domain}"
-    PI_DB_IS_MYSQL = "true"
+    RENDERER_DASHBOARD_URL    = "http://${local.dashboard_private_domain}/pi"
+    PAN_RENDERER_URL          = "http://${local.renderer_private_domain}"
+    PAN_SCHEDULER_URL         = "http://${local.scheduler_private_domain}"
+    PI_DB_IS_MYSQL            = "true"
   }
   database_env_vars = {
-    PI_DB_HOST = module.rds-aurora.cluster_endpoint
-    PI_DB_PASSWORD = module.rds-aurora.cluster_master_password
-    PI_DB_PORT = module.rds-aurora.cluster_port
+    PI_DB_HOST        = module.rds-aurora.cluster_endpoint
+    PI_DB_PASSWORD    = module.rds-aurora.cluster_master_password
+    PI_DB_PORT        = module.rds-aurora.cluster_port
     PI_DB_SCHEMA_NAME = "dashboard"
-    PI_DB_USERNAME = module.rds-aurora.cluster_master_username
+    PI_DB_USERNAME    = module.rds-aurora.cluster_master_username
   }
   docker_hub_secrets_arn = var.docker_secret_arn
   private_alb_sg_id      = module.private_alb.security_group_id
@@ -267,14 +268,14 @@ module "pi" {
 
 
   scheduler_alb_listener_arn = module.private_alb.listeners["http"].arn
-  scheduler_private_domain = local.scheduler_private_domain
+  scheduler_private_domain   = local.scheduler_private_domain
   scheduler_task_env_vars = {
     SCHEDULER_DASHBOARD_URL = "http://${local.dashboard_private_domain}/pi"
   }
 
 
-  pirana_alb_listener_arn   = module.private_alb.listeners["http"].arn
-  pirana_private_domain     = local.pirana_private_domain
+  pirana_alb_listener_arn = module.private_alb.listeners["http"].arn
+  pirana_private_domain   = local.pirana_private_domain
 
   renderer_alb_listener_arn = module.private_alb.listeners["http"].arn
   renderer_private_domain   = local.renderer_private_domain
