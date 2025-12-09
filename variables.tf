@@ -36,6 +36,12 @@ variable "efs_backup_force_destroy" {
   type        = bool
   default     = false
 }
+
+variable "set_up_efs" {
+  description = "Whether to set up EFS (using lambda) with the structure required by the dashboard and scheduler"
+  type        = bool
+  default     = true
+}
 #### COMMON CONTAINER SETTINGS ####
 
 variable "docker_hub_secrets_arn" {

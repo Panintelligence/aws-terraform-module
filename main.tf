@@ -19,6 +19,8 @@ module "efs" {
 
 module "lambda" {
   source                 = "./modules/efs_setup"
+  count = var.set_up_efs ? 1 : 0
+
   application_subnet_ids = var.application_subnet_ids
   dashboard_efs_id       = module.efs.efs_file_system.id
   deployment_name        = var.deployment_name
