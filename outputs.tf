@@ -22,15 +22,15 @@ output "efs_security_group" {
 }
 
 output "efs_lambda" {
-  value = try(module.lambda.lambda_function, null)
+  value = try(module.lambda[0].lambda_function, null)
 }
 
 output "efs_lambda_role" {
-  value = try(module.lambda.lambda_role, null)
+  value = try(module.lambda[0].lambda_role, null)
 }
 
 output "efs_lambda_security_group" {
-  value = try(module.lambda.lambda_security_group, null)
+  value = try(module.lambda[0].lambda_security_group, null)
 }
 
 
