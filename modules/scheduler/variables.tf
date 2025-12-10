@@ -54,3 +54,6 @@ variable "private_alb_sg_id" {
 variable "enable_execute_command" {
   type = bool
 }
+variable "db_credentials_secret_arn" {
+  type = string
+}

@@ -6,8 +6,18 @@ data "aws_subnet" "private_subnet" {
 
 
 locals {
-  env_variables      = [for k, v in var.task_env_vars : { name = k, value = v }]
-  database_variables = [for k, v in var.database_env_vars : { name = k, value = v }]
+  env_variables      = [for k, v in var.task_env_vars : { name = k, value = v } if v != null ]
+  database_variables = [for k, v in var.database_env_vars : { name = k, value = v } if v != null ]
+  db_secret = var.db_credentials_secret_arn != null ? [
+    {
+      name      = "PI_DB_USERNAME"
+      valueFrom = "${var.db_credentials_secret_arn}:username::"
+    },
+    {
+      name      = "PI_DB_PASSWORD"
+      valueFrom = "${var.db_credentials_secret_arn}:password::"
+    }
+  ] : null
 }
 
 
@@ -31,6 +41,7 @@ resource "aws_ecs_task_definition" "scheduler" {
     }]
 
     environment = concat(local.env_variables, local.database_variables)
+    secrets     = local.db_secret
 
     mountPoints = [{
       containerPath = "/var/panintelligence/Dashboard/keys",

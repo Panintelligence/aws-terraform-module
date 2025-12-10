@@ -1,5 +1,5 @@
 output "internal_target_group" {
-  value =try(aws_lb_target_group.dashboard["external"], null)
+  value = try(aws_lb_target_group.dashboard["external"], null)
 }
 
 output "external_target_group" {

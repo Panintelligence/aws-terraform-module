@@ -4,7 +4,7 @@ module "ecs" {
   source                     = "./modules/ecs"
   deployment_name            = var.deployment_name
   container_insights_setting = var.container_insights_setting
-  docker_hub_secrets_arn     = var.docker_hub_secrets_arn
+  secrets_allowed_arns       = [var.docker_hub_secrets_arn, var.db_credentials_secret_arn]
   enable_execute_command     = var.enable_execute_command
 }
 
@@ -18,8 +18,8 @@ module "efs" {
 }
 
 module "lambda" {
-  source                 = "./modules/efs_setup"
-  count = var.set_up_efs ? 1 : 0
+  source = "./modules/efs_setup"
+  count  = var.set_up_efs ? 1 : 0
 
   application_subnet_ids = var.application_subnet_ids
   dashboard_efs_id       = module.efs.efs_file_system.id
@@ -47,6 +47,7 @@ module "dashboard" {
   aws_ecs_cluster_id        = module.ecs.ecs_cluster.id
   efs_security_group_id     = module.efs.efs_security_group.id
   database_env_vars         = var.database_env_vars
+  db_credentials_secret_arn = var.db_credentials_secret_arn
   task_env_vars             = var.dashboard_task_env_vars
   enable_execute_command    = var.enable_execute_command
 
@@ -66,24 +67,25 @@ module "scheduler" {
   source = "./modules/scheduler"
   count  = var.create_scheduler ? 1 : 0
 
-  alb_listener_arn         = var.scheduler_alb_listener_arn
-  application_subnet_ids   = var.application_subnet_ids
-  aws_ecs_cluster_id       = module.ecs.ecs_cluster.id
-  dashboard_efs_id         = module.efs.efs_file_system.id
-  deployment_name          = var.deployment_name
-  docker_hub_secrets_arn   = var.docker_hub_secrets_arn
-  execution_role_arn       = module.ecs.ecs_task_execution_role.arn
-  scheduler_cpu            = var.scheduler_cpu
-  docker_image             = var.scheduler_image
-  scheduler_memory         = var.scheduler_memory
-  scheduler_private_domain = var.scheduler_private_domain
-  scheduler_sec_groups_ids = var.scheduler_sec_group_ids
-  task_role_arn            = module.ecs.ecs_task_role.arn
-  efs_security_group_id    = module.efs.efs_security_group.id
-  database_env_vars        = var.database_env_vars
-  task_env_vars            = var.scheduler_task_env_vars
-  private_alb_sg_id        = var.internal_alb_sg_id
-  enable_execute_command   = var.enable_execute_command
+  alb_listener_arn          = var.scheduler_alb_listener_arn
+  application_subnet_ids    = var.application_subnet_ids
+  aws_ecs_cluster_id        = module.ecs.ecs_cluster.id
+  dashboard_efs_id          = module.efs.efs_file_system.id
+  deployment_name           = var.deployment_name
+  docker_hub_secrets_arn    = var.docker_hub_secrets_arn
+  execution_role_arn        = module.ecs.ecs_task_execution_role.arn
+  scheduler_cpu             = var.scheduler_cpu
+  docker_image              = var.scheduler_image
+  scheduler_memory          = var.scheduler_memory
+  scheduler_private_domain  = var.scheduler_private_domain
+  scheduler_sec_groups_ids  = var.scheduler_sec_group_ids
+  task_role_arn             = module.ecs.ecs_task_role.arn
+  efs_security_group_id     = module.efs.efs_security_group.id
+  database_env_vars         = var.database_env_vars
+  db_credentials_secret_arn = var.db_credentials_secret_arn
+  task_env_vars             = var.scheduler_task_env_vars
+  private_alb_sg_id         = var.internal_alb_sg_id
+  enable_execute_command    = var.enable_execute_command
 }
 
 module "renderer" {

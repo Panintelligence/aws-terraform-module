@@ -5,30 +5,41 @@ data "aws_subnet" "private_subnet" {
 
 
 locals {
-  env_variables      = [for k, v in var.task_env_vars : { name = k, value = v }]
-  database_variables = [for k, v in var.database_env_vars : { name = k, value = v }]
+  env_variables      = [for k, v in var.task_env_vars : { name = k, value = v } if v != null ]
+  database_variables = [for k, v in var.database_env_vars : { name = k, value = v } if v != null ]
 
   internal_lb = var.internal_networking_enabled ? {
-        internal = {
-        port        = 28748
-        host_header = var.dashboard_private_domain
-        protocol    = "HTTP"
-        alb_sg      = var.internal_alb_sg_id
-        listener    = var.alb_listener_internal_arn
-      }
-    } : {}
+    internal = {
+      port        = 28748
+      host_header = var.dashboard_private_domain
+      protocol    = "HTTP"
+      alb_sg      = var.internal_alb_sg_id
+      listener    = var.alb_listener_internal_arn
+    }
+  } : {}
 
   external_lb = var.external_networking_enabled ? {
-      external = {
-        port        = 8224
-        host_header = var.dashboard_public_domain
-        protocol    = "HTTPS"
-        alb_sg      = var.external_alb_sg_id
-        listener    = var.alb_listener_external_arn
-      }
-    } : {}
+    external = {
+      port        = 8224
+      host_header = var.dashboard_public_domain
+      protocol    = "HTTPS"
+      alb_sg      = var.external_alb_sg_id
+      listener    = var.alb_listener_external_arn
+    }
+  } : {}
 
   load_balancers = merge(local.internal_lb, local.external_lb)
+
+  db_secret = var.db_credentials_secret_arn != null ? [
+    {
+      name      = "PI_DB_USERNAME"
+      valueFrom = "${var.db_credentials_secret_arn}:username::"
+    },
+    {
+      name      = "PI_DB_PASSWORD"
+      valueFrom = "${var.db_credentials_secret_arn}:password::"
+    }
+  ] : null
 }
 
 resource "aws_ecs_task_definition" "dashboard" {
@@ -62,6 +73,7 @@ resource "aws_ecs_task_definition" "dashboard" {
     ]
 
     environment = concat(local.env_variables, local.database_variables)
+    secrets     = local.db_secret
 
     mountPoints = [
       {
@@ -197,7 +209,7 @@ resource "aws_ecs_service" "dashboard" {
     assign_public_ip = false
   }
 
-  dynamic load_balancer {
+  dynamic "load_balancer" {
     for_each = local.load_balancers
     content {
       target_group_arn = aws_lb_target_group.dashboard[load_balancer.key].arn
@@ -210,7 +222,7 @@ resource "aws_ecs_service" "dashboard" {
 
 
 resource "aws_lb_target_group" "dashboard" {
-  for_each = local.load_balancers
+  for_each    = local.load_balancers
   name        = "${var.deployment_name}-${each.key}"
   port        = each.value.port
   protocol    = each.value.protocol
@@ -230,7 +242,7 @@ resource "aws_lb_target_group" "dashboard" {
 
 
 resource "aws_lb_listener_rule" "dashboard" {
-  for_each = local.load_balancers
+  for_each     = local.load_balancers
   listener_arn = each.value.listener
 
   action {

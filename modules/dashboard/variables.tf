@@ -73,3 +73,6 @@ variable "internal_networking_enabled" {
 variable "external_networking_enabled" {
   type = bool
 }
+variable "db_credentials_secret_arn" {
+  type = string
+}

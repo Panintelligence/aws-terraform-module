@@ -6,8 +6,8 @@ variable "container_insights_setting" {
   type = string
 }
 
-variable "docker_hub_secrets_arn" {
-  type = string
+variable "secrets_allowed_arns" {
+  type = list(string)
 }
 
 variable "enable_execute_command" {

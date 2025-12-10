@@ -24,8 +24,10 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 }
 
 
+
 data "aws_iam_policy_document" "ecs_task_execution_policy" {
-  count = var.docker_hub_secrets_arn != null ? 1 : 0
+  # count = var.docker_hub_secrets_arn != null || var.db_secret_arn != null ? 1 : 0
+  count = length(var.secrets_allowed_arns) > 0 ? 1 : 0
   statement {
     actions = [
       "secretsmanager:ListSecretVersionIds",
@@ -33,7 +35,7 @@ data "aws_iam_policy_document" "ecs_task_execution_policy" {
       "secretsmanager:GetResourcePolicy",
       "secretsmanager:DescribeSecret"
     ]
-    resources = [var.docker_hub_secrets_arn]
+    resources = compact(var.secrets_allowed_arns)
     effect    = "Allow"
   }
 }
@@ -50,14 +52,16 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy_attachment"
 }
 
 resource "aws_iam_policy" "ecs_task_execution_policy" {
-  count       = var.docker_hub_secrets_arn != null ? 1 : 0
+  count = length(var.secrets_allowed_arns) > 0 ? 1 : 0
+
   name        = "${var.deployment_name}-ecs-execution-policy-secrets"
-  description = "Allow read of docker secret in secrets manager"
+  description = "Allow read of secrets from secrets manager"
   policy      = data.aws_iam_policy_document.ecs_task_execution_policy[0].json
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_get_secret" {
-  count      = var.docker_hub_secrets_arn != null ? 1 : 0
+  count = length(var.secrets_allowed_arns) > 0 ? 1 : 0
+
   policy_arn = aws_iam_policy.ecs_task_execution_policy[0].arn
   role       = aws_iam_role.ecs_execution_role.name
 }

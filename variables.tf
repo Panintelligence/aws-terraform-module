@@ -51,15 +51,21 @@ variable "docker_hub_secrets_arn" {
 }
 
 variable "database_env_vars" {
-  description = "Environment variables shared by dashboard and scheduler, for connecting to the repository database"
+  description = "Environment variables shared by dashboard and scheduler, for connecting to the repository database. Credentials can be supplied through `db_credentials_secret_arn` instead"
   type = object({
     PI_DB_HOST        = string,
-    PI_DB_PASSWORD    = string,
+    PI_DB_PASSWORD    = optional(string, null),
     PI_DB_PORT        = string,
     PI_DB_SCHEMA_NAME = string,
-    PI_DB_USERNAME    = string
+    PI_DB_USERNAME    = optional(string, null)
   })
   default = null
+}
+
+variable "db_credentials_secret_arn" {
+  description = "ARN of the secret containing the database credentials. Secret must contain a `username` and `password` key"
+  type        = string
+  default     = null
 }
 
 #### DASHBOARD VARIABLES ####
@@ -114,6 +120,9 @@ variable "dashboard_task_env_vars" {
   type        = any
   default     = null
 }
+
+
+
 variable "internal_alb_sg_id" {
   description = "Security group ID used by the private ALB, to allow traffic to the dashboard ECS service"
   type        = string
@@ -126,13 +135,13 @@ variable "external_alb_sg_id" {
 }
 variable "dashboard_external_networking_enabled" {
   description = "Enable to use the 8224 internal port for dashboard"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 variable "dashboard_internal_networking_enabled" {
   description = "Enable to use the 28748 external port for dashboard"
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 #### SCHEDULER VARIABLES ####
