@@ -56,13 +56,20 @@ variable "task_env_vars" {
 variable "database_env_vars" {
   type = any
 }
-variable "public_alb_sg_id" {
+variable "external_alb_sg_id" {
   type = string
 }
-variable "private_alb_sg_id" {
+variable "internal_alb_sg_id" {
   type = string
 }
 
 variable "enable_execute_command" {
+  type = bool
+}
+
+variable "internal_networking_enabled" {
+  type = bool
+}
+variable "external_networking_enabled" {
   type = bool
 }

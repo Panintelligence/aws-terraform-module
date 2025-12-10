@@ -114,15 +114,25 @@ variable "dashboard_task_env_vars" {
   type        = any
   default     = null
 }
-variable "private_alb_sg_id" {
+variable "internal_alb_sg_id" {
   description = "Security group ID used by the private ALB, to allow traffic to the dashboard ECS service"
   type        = string
   default     = null
 }
-variable "public_alb_sg_id" {
+variable "external_alb_sg_id" {
   description = "Security group ID used by the public ALB, to allow traffic to the dashboard ECS service"
   type        = string
   default     = null
+}
+variable "dashboard_external_networking_enabled" {
+  description = "Enable to use the 8224 internal port for dashboard"
+  type = bool
+  default = true
+}
+variable "dashboard_internal_networking_enabled" {
+  description = "Enable to use the 28748 external port for dashboard"
+  type = bool
+  default = true
 }
 
 #### SCHEDULER VARIABLES ####

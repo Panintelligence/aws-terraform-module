@@ -1,9 +1,9 @@
 output "internal_target_group" {
-  value = aws_lb_target_group.dashboard_internal
+  value =try(aws_lb_target_group.dashboard["external"], null)
 }
 
 output "external_target_group" {
-  value = aws_lb_target_group.dashboard
+  value = try(aws_lb_target_group.dashboard["internal"], null)
 }
 
 output "task_definition" {
@@ -15,11 +15,11 @@ output "service" {
 }
 
 output "external_listener_rule" {
-  value = aws_lb_listener_rule.dashboard
+  value = try(aws_lb_listener_rule.dashboard["external"], null)
 }
 
 output "internal_listener_rule" {
-  value = aws_lb_listener_rule.dashboard_internal
+  value = try(aws_lb_listener_rule.dashboard["internal"], null)
 }
 
 

@@ -7,6 +7,28 @@ data "aws_subnet" "private_subnet" {
 locals {
   env_variables      = [for k, v in var.task_env_vars : { name = k, value = v }]
   database_variables = [for k, v in var.database_env_vars : { name = k, value = v }]
+
+  internal_lb = var.internal_networking_enabled ? {
+        internal = {
+        port        = 28748
+        host_header = var.dashboard_private_domain
+        protocol    = "HTTP"
+        alb_sg      = var.internal_alb_sg_id
+        listener    = var.alb_listener_internal_arn
+      }
+    } : {}
+
+  external_lb = var.external_networking_enabled ? {
+      external = {
+        port        = 8224
+        host_header = var.dashboard_public_domain
+        protocol    = "HTTPS"
+        alb_sg      = var.external_alb_sg_id
+        listener    = var.alb_listener_external_arn
+      }
+    } : {}
+
+  load_balancers = merge(local.internal_lb, local.external_lb)
 }
 
 resource "aws_ecs_task_definition" "dashboard" {
@@ -21,20 +43,22 @@ resource "aws_ecs_task_definition" "dashboard" {
     repositoryCredentials = var.docker_hub_secrets_arn != null ? { credentialsParameter = var.docker_hub_secrets_arn } : null
 
     portMappings = [
+      length(local.external_lb) > 0 ?
       {
-        containerPort = 8224,
-        hostPort      = 8224,
-        appProtocol   = "http",
+        containerPort = local.external_lb.external.port
+        hostPort      = local.external_lb.external.port
+        appProtocol   = "http"
         protocol      = "tcp"
         name          = "dashboard"
-      },
+      } : null,
+      length(local.internal_lb) > 0 ?
       {
-        containerPort = 28748,
-        hostPort      = 28748,
-        appProtocol   = "http",
+        containerPort = local.internal_lb.internal.port
+        hostPort      = local.internal_lb.internal.port
+        appProtocol   = "http"
         protocol      = "tcp"
         name          = "dashboard-internal"
-      }
+      } : null
     ]
 
     environment = concat(local.env_variables, local.database_variables)
@@ -173,22 +197,23 @@ resource "aws_ecs_service" "dashboard" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.dashboard.arn
-    container_name   = "dashboard"
-    container_port   = 8224
-  }
-  load_balancer {
-    target_group_arn = aws_lb_target_group.dashboard_internal.arn
-    container_name   = "dashboard"
-    container_port   = 28748
+  dynamic load_balancer {
+    for_each = local.load_balancers
+    content {
+      target_group_arn = aws_lb_target_group.dashboard[load_balancer.key].arn
+      container_name   = "dashboard"
+      container_port   = load_balancer.value.port
+    }
+
   }
 }
+
 
 resource "aws_lb_target_group" "dashboard" {
-  name        = "${var.deployment_name}-dashboard"
-  port        = 8224
-  protocol    = "HTTP"
+  for_each = local.load_balancers
+  name        = "${var.deployment_name}-${each.key}"
+  port        = each.value.port
+  protocol    = each.value.protocol
   vpc_id      = data.aws_subnet.private_subnet.vpc_id
   target_type = "ip"
 
@@ -202,63 +227,43 @@ resource "aws_lb_target_group" "dashboard" {
     unhealthy_threshold = 2
   }
 }
-
-resource "aws_lb_target_group" "dashboard_internal" {
-  name        = "${var.deployment_name}-dashboard-int"
-  port        = 28748
-  protocol    = "HTTP"
-  vpc_id      = data.aws_subnet.private_subnet.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    interval            = 15
-    path                = "/pi/version"
-    timeout             = 5
-    matcher             = "200"
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-  }
-}
-
 
 
 resource "aws_lb_listener_rule" "dashboard" {
-  listener_arn = var.alb_listener_external_arn
+  for_each = local.load_balancers
+  listener_arn = each.value.listener
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.dashboard.arn
+    target_group_arn = aws_lb_target_group.dashboard[each.key].arn
   }
 
   condition {
     host_header {
-      values = [var.dashboard_public_domain]
+      values = [each.value.host_header]
     }
   }
 }
 
-
-resource "aws_lb_listener_rule" "dashboard_internal" {
-  listener_arn = var.alb_listener_internal_arn
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.dashboard_internal.arn
-  }
-
-  condition {
-    host_header {
-      values = [var.dashboard_private_domain]
-    }
-  }
-}
 
 resource "aws_security_group" "dashboard" {
   name        = "${var.deployment_name}-dashboard"
   description = "Main ${var.deployment_name} dashboard security group"
   vpc_id      = data.aws_subnet.private_subnet.vpc_id
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "dashboard_alb" {
+  for_each = local.load_balancers
+
+  security_group_id            = aws_security_group.dashboard.id
+  description                  = "Allow traffic from ${each.key} ALB"
+  ip_protocol                  = "tcp"
+  from_port                    = each.value.port
+  to_port                      = each.value.port
+  referenced_security_group_id = each.value.alb_sg
+}
+
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
   security_group_id = aws_security_group.dashboard.id
@@ -274,24 +279,4 @@ resource "aws_vpc_security_group_ingress_rule" "efs" {
   to_port                      = 2049
   referenced_security_group_id = aws_security_group.dashboard.id
 
-}
-
-
-resource "aws_vpc_security_group_ingress_rule" "dashboard_public_alb" {
-  security_group_id            = aws_security_group.dashboard.id
-  description                  = "Allow traffic from public ALB"
-  ip_protocol                  = "tcp"
-  from_port                    = 8224
-  to_port                      = 8224
-  referenced_security_group_id = var.public_alb_sg_id
-}
-
-
-resource "aws_vpc_security_group_ingress_rule" "dashboard_private_alb" {
-  security_group_id            = aws_security_group.dashboard.id
-  description                  = "Allow traffic from private ALB"
-  ip_protocol                  = "tcp"
-  from_port                    = 28748
-  to_port                      = 28748
-  referenced_security_group_id = var.private_alb_sg_id
 }

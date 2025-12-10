@@ -263,8 +263,8 @@ module "pi" {
     PI_DB_USERNAME    = module.rds-aurora.cluster_master_username
   }
   docker_hub_secrets_arn = var.docker_secret_arn
-  private_alb_sg_id      = module.private_alb.security_group_id
-  public_alb_sg_id       = module.public_alb.security_group_id
+  internal_alb_sg_id     = module.private_alb.security_group_id
+  external_alb_sg_id     = module.public_alb.security_group_id
 
 
   scheduler_alb_listener_arn = module.private_alb.listeners["http"].arn
