@@ -19,8 +19,6 @@ The network should be deployed first to avoid a terraform error
 
 - Export your aws credentials (admin access)
 - terraform init
-- terraform plan -target=module.vpc
-- terraform apply -target=module.vpc
 - terraform plan
 - terraform apply
 
