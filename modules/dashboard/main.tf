@@ -22,7 +22,7 @@ locals {
     external = {
       port        = 8224
       host_header = var.dashboard_public_domain
-      protocol    = "HTTPS"
+      protocol    = "HTTP"
       alb_sg      = var.external_alb_sg_id
       listener    = var.alb_listener_external_arn
     }
