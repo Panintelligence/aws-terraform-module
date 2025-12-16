@@ -263,20 +263,17 @@ module "pi" {
     PI_DB_USERNAME    = module.rds-aurora.cluster_master_username
   }
   docker_hub_secrets_arn = var.docker_secret_arn
-  internal_alb_sg_id     = module.private_alb.security_group_id
-  external_alb_sg_id     = module.public_alb.security_group_id
+  dashboard_internal_alb_sg_id     = module.private_alb.security_group_id
+  dashboard_external_alb_sg_id     = module.public_alb.security_group_id
 
 
-  scheduler_alb_listener_arn = module.private_alb.listeners["http"].arn
   scheduler_private_domain   = local.scheduler_private_domain
   scheduler_task_env_vars = {
     SCHEDULER_DASHBOARD_URL = "http://${local.dashboard_private_domain}/pi"
   }
 
 
-  pirana_alb_listener_arn = module.private_alb.listeners["http"].arn
   pirana_private_domain   = local.pirana_private_domain
 
-  renderer_alb_listener_arn = module.private_alb.listeners["http"].arn
   renderer_private_domain   = local.renderer_private_domain
 }

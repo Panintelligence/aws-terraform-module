@@ -169,5 +169,16 @@ resource "aws_vpc_security_group_ingress_rule" "scheduler_private_alb" {
   ip_protocol                  = "tcp"
   from_port                    = 9917
   to_port                      = 9917
-  referenced_security_group_id = var.private_alb_sg_id
+  referenced_security_group_id = var.alb_sg_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "scheduler_to_alb" {
+  count = var.internal_networking_enabled ? 1 : 0
+
+  security_group_id            = aws_security_group.scheduler.id
+  description                  = "Allow HTTP traffic to the ALB from the scheduler"
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  referenced_security_group_id = var.alb_sg_id
 }

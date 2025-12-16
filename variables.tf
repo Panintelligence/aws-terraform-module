@@ -123,16 +123,17 @@ variable "dashboard_task_env_vars" {
 
 
 
-variable "internal_alb_sg_id" {
-  description = "Security group ID used by the private ALB, to allow traffic to the dashboard ECS service"
+variable "dashboard_internal_alb_sg_id" {
+  description = "Security group ID used by the private ALB, to allow traffic to ECS services"
   type        = string
   default     = null
 }
-variable "external_alb_sg_id" {
-  description = "Security group ID used by the public ALB, to allow traffic to the dashboard ECS service"
+variable "dashboard_external_alb_sg_id" {
+  description = "Security group ID used by the public ALB, to allow traffic to ECS services"
   type        = string
   default     = null
 }
+
 variable "dashboard_external_networking_enabled" {
   description = "Enable to use the 8224 internal port for dashboard"
   type        = bool
@@ -153,10 +154,17 @@ variable "create_scheduler" {
 }
 
 variable "scheduler_alb_listener_arn" {
-  description = "ARN of the ALB listener for the scheduler ECS service, for which a rule will be created. Using a private ALB is recommended"
+  description = "ARN of the ALB listener for the scheduler ECS service, for which a rule will be created, if different from the dashboard. Using a private ALB is recommended"
   type        = string
   default     = null
 }
+
+variable "scheduler_alb_sg_id" {
+  description = "Security group ID used by the ALB, to allow traffic to scheduler ECS services, if different from the dashboard"
+  type        = string
+  default     = null
+}
+
 variable "scheduler_cpu" {
   description = "CPU units for the scheduler ECS task. Choose valid Fargate sizing"
   type        = number
@@ -196,7 +204,12 @@ variable "create_renderer" {
   type        = bool
 }
 variable "renderer_alb_listener_arn" {
-  description = "ARN of the ALB listener for the renderer ECS service, for which a rule will be created. Using a private ALB is recommended"
+  description = "ARN of the ALB listener for the renderer ECS service, for which a rule will be created, if different from the dashboard. Using a private ALB is recommended"
+  type        = string
+  default     = null
+}
+variable "renderer_alb_sg_id" {
+  description = "Security group ID used by the ALB, to allow traffic to renderer ECS services, if different from the dashboard"
   type        = string
   default     = null
 }
@@ -240,7 +253,12 @@ variable "create_pirana" {
   type        = bool
 }
 variable "pirana_alb_listener_arn" {
-  description = "ARN of the ALB listener for the pirana ECS service, for which a rule will be created. Using a private ALB is recommended"
+  description = "ARN of the ALB listener for the pirana ECS service, for which a rule will be created, if different from the dashboard. Using a private ALB is recommended"
+  type        = string
+  default     = null
+}
+variable "pirana_alb_sg_id" {
+  description = "Security group ID used by the ALB, to allow traffic to pirana ECS services, if different from the dashboard"
   type        = string
   default     = null
 }

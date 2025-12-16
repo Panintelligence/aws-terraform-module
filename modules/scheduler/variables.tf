@@ -48,7 +48,7 @@ variable "database_env_vars" {
 variable "docker_image" {
   type = string
 }
-variable "private_alb_sg_id" {
+variable "alb_sg_id" {
   type = string
 }
 variable "enable_execute_command" {
@@ -56,4 +56,7 @@ variable "enable_execute_command" {
 }
 variable "db_credentials_secret_arn" {
   type = string
+}
+variable "internal_networking_enabled" {
+  type = bool
 }

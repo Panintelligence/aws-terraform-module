@@ -1,3 +1,7 @@
+# TODO: rds module
+# TODO maybe alb module
+
+
 module "ecs" {
   #todo: option to run within existing cluster
   #todo: option to not fargate
@@ -25,6 +29,8 @@ module "lambda" {
   dashboard_efs_id       = module.efs.efs_file_system.id
   deployment_name        = var.deployment_name
   efs_security_group_id  = module.efs.efs_security_group.id
+
+  depends_on = [module.efs.efs_mount_target_ids] #forcing this module to wait for mount points to become ready
 }
 
 
@@ -53,12 +59,12 @@ module "dashboard" {
 
   external_networking_enabled = var.dashboard_external_networking_enabled
   alb_listener_external_arn   = var.dashboard_alb_listener_external_arn
-  external_alb_sg_id          = var.external_alb_sg_id
+  external_alb_sg_id          = var.dashboard_external_alb_sg_id
   dashboard_public_domain     = var.dashboard_public_domain
 
   internal_networking_enabled = var.dashboard_internal_networking_enabled
   alb_listener_internal_arn   = var.dashboard_alb_listener_internal_arn
-  internal_alb_sg_id          = var.internal_alb_sg_id
+  internal_alb_sg_id          = var.dashboard_internal_alb_sg_id
   dashboard_private_domain    = var.dashboard_private_domain
 }
 
@@ -67,32 +73,33 @@ module "scheduler" {
   source = "./modules/scheduler"
   count  = var.create_scheduler ? 1 : 0
 
-  alb_listener_arn          = var.scheduler_alb_listener_arn
-  application_subnet_ids    = var.application_subnet_ids
-  aws_ecs_cluster_id        = module.ecs.ecs_cluster.id
-  dashboard_efs_id          = module.efs.efs_file_system.id
-  deployment_name           = var.deployment_name
-  docker_hub_secrets_arn    = var.docker_hub_secrets_arn
-  execution_role_arn        = module.ecs.ecs_task_execution_role.arn
-  scheduler_cpu             = var.scheduler_cpu
-  docker_image              = var.scheduler_image
-  scheduler_memory          = var.scheduler_memory
-  scheduler_private_domain  = var.scheduler_private_domain
-  scheduler_sec_groups_ids  = var.scheduler_sec_group_ids
-  task_role_arn             = module.ecs.ecs_task_role.arn
-  efs_security_group_id     = module.efs.efs_security_group.id
-  database_env_vars         = var.database_env_vars
-  db_credentials_secret_arn = var.db_credentials_secret_arn
-  task_env_vars             = var.scheduler_task_env_vars
-  private_alb_sg_id         = var.internal_alb_sg_id
-  enable_execute_command    = var.enable_execute_command
+  alb_listener_arn = coalesce(var.scheduler_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
+  application_subnet_ids      = var.application_subnet_ids
+  aws_ecs_cluster_id          = module.ecs.ecs_cluster.id
+  dashboard_efs_id            = module.efs.efs_file_system.id
+  deployment_name             = var.deployment_name
+  docker_hub_secrets_arn      = var.docker_hub_secrets_arn
+  execution_role_arn          = module.ecs.ecs_task_execution_role.arn
+  scheduler_cpu               = var.scheduler_cpu
+  docker_image                = var.scheduler_image
+  scheduler_memory            = var.scheduler_memory
+  scheduler_private_domain    = var.scheduler_private_domain
+  scheduler_sec_groups_ids    = var.scheduler_sec_group_ids
+  task_role_arn               = module.ecs.ecs_task_role.arn
+  efs_security_group_id       = module.efs.efs_security_group.id
+  database_env_vars           = var.database_env_vars
+  db_credentials_secret_arn   = var.db_credentials_secret_arn
+  task_env_vars               = var.scheduler_task_env_vars
+  alb_sg_id                   = coalesce(var.scheduler_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
+  enable_execute_command      = var.enable_execute_command
+  internal_networking_enabled = var.dashboard_internal_networking_enabled
 }
 
 module "renderer" {
   source = "./modules/renderer"
   count  = var.create_renderer ? 1 : 0
 
-  alb_listener_arn        = var.renderer_alb_listener_arn
+  alb_listener_arn        = coalesce(var.renderer_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
   application_subnet_ids  = var.application_subnet_ids
   aws_ecs_cluster_id      = module.ecs.ecs_cluster.id
   deployment_name         = var.deployment_name
@@ -105,15 +112,16 @@ module "renderer" {
   renderer_sec_group_ids  = var.renderer_sec_group_ids
   task_role_arn           = module.ecs.ecs_task_role.arn
   task_env_vars           = var.renderer_task_env_vars
-  private_alb_sg_id       = var.internal_alb_sg_id
+  alb_sg_id               = coalesce(var.renderer_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
   enable_execute_command  = var.enable_execute_command
+  internal_networking_enabled = var.dashboard_internal_networking_enabled
 }
 
 module "pirana" {
   source = "./modules/pirana"
   count  = var.create_pirana ? 1 : 0
 
-  alb_listener_arn       = var.pirana_alb_listener_arn
+  alb_listener_arn       = coalesce(var.pirana_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
   application_subnet_ids = var.application_subnet_ids
   aws_ecs_cluster_id     = module.ecs.ecs_cluster.id
   deployment_name        = var.deployment_name
@@ -126,6 +134,6 @@ module "pirana" {
   pirana_sec_group_ids   = var.pirana_sec_group_ids
   task_role_arn          = module.ecs.ecs_task_role.arn
   task_env_vars          = var.pirana_task_env_vars
-  private_alb_sg_id      = var.internal_alb_sg_id
+  alb_sg_id              = coalesce(var.pirana_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
   enable_execute_command = var.enable_execute_command
 }

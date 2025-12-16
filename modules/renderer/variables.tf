@@ -41,10 +41,12 @@ variable "task_env_vars" {
 variable "docker_image" {
   type = string
 }
-variable "private_alb_sg_id" {
+variable "alb_sg_id" {
   type = string
 }
-
+variable "internal_networking_enabled" {
+  type = bool
+}
 variable "enable_execute_command" {
   type = bool
 }

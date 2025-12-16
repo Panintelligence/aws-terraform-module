@@ -20,7 +20,7 @@ resource "aws_security_group" "efs" {
   }
 }
 
-resource "aws_efs_mount_target" "pi_a" {
+resource "aws_efs_mount_target" "pi" {
   count = length(var.application_subnet_ids)
 
   file_system_id  = aws_efs_file_system.pi.id

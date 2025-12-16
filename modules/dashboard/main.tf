@@ -265,7 +265,7 @@ resource "aws_security_group" "dashboard" {
 }
 
 
-resource "aws_vpc_security_group_ingress_rule" "dashboard_alb" {
+resource "aws_vpc_security_group_ingress_rule" "alb_to_dashboard" {
   for_each = local.load_balancers
 
   security_group_id            = aws_security_group.dashboard.id
@@ -275,6 +275,19 @@ resource "aws_vpc_security_group_ingress_rule" "dashboard_alb" {
   to_port                      = each.value.port
   referenced_security_group_id = each.value.alb_sg
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "dashboard_to_alb" {
+  count = var.internal_networking_enabled ? 1 : 0
+
+  security_group_id            = aws_security_group.dashboard.id
+  description                  = "Allow HTTP traffic to the ALB from the dashboard"
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  referenced_security_group_id = var.internal_alb_sg_id
+}
+
 
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {

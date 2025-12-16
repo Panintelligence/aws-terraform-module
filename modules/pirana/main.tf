@@ -132,5 +132,5 @@ resource "aws_vpc_security_group_ingress_rule" "pirana_alb" {
   ip_protocol                  = "tcp"
   from_port                    = 9918
   to_port                      = 9918
-  referenced_security_group_id = var.private_alb_sg_id
+  referenced_security_group_id = var.alb_sg_id
 }
