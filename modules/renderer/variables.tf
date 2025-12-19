@@ -50,3 +50,6 @@ variable "internal_networking_enabled" {
 variable "enable_execute_command" {
   type = bool
 }
+variable "desired_count" {
+  type = number
+}

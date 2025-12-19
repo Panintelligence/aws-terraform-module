@@ -47,3 +47,6 @@ variable "alb_sg_id" {
 variable "enable_execute_command" {
   type = bool
 }
+variable "desired_count" {
+  type = number
+}

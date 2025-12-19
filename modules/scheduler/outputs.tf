@@ -1,17 +1,17 @@
 output "task_definition" {
-  value = aws_ecs_task_definition.scheduler
+  value = try(aws_ecs_task_definition.scheduler[0], null)
 }
 
 output "service" {
-  value = aws_ecs_service.scheduler
+  value = try(aws_ecs_service.scheduler[0], null)
 }
 
 output "target_group" {
-  value = aws_lb_target_group.scheduler
+  value = try(aws_lb_target_group.scheduler[0], null)
 }
 
 output "listener_rule" {
-  value = aws_lb_listener_rule.scheduler
+  value = try(aws_lb_listener_rule.scheduler[0], null)
 }
 
 output "main_security_group" {

@@ -118,7 +118,7 @@ variable "dashboard_alb_listener_internal_arn" {
 variable "dashboard_task_env_vars" {
   description = "An object consisting of key value pairs for environment variables to be passed to the dashboard ECS task. Format is {VARIABLE_NAME = 'VALUE'} "
   type        = any
-  default     = null
+  default     = {}
 }
 
 
@@ -144,6 +144,12 @@ variable "dashboard_internal_networking_enabled" {
   type        = bool
   default     = true
 }
+variable "dashboard_desired_count" {
+  description = "Desired number of dashboard instances. Setting to 0 disables the service and target group."
+  type        = number
+  default     = 1
+}
+
 
 #### SCHEDULER VARIABLES ####
 
@@ -195,6 +201,11 @@ variable "scheduler_task_env_vars" {
   type        = any
   default     = {}
 }
+variable "scheduler_desired_count" {
+  description = "Desired number of scheduler instances. Setting to 0 disables the service and target group. Number greater than 1 not recommended at this time"
+  type        = number
+  default     = 1
+}
 
 #### RENDERER VARIABLES ####
 
@@ -243,7 +254,11 @@ variable "renderer_task_env_vars" {
   type        = any
   default     = {}
 }
-
+variable "renderer_desired_count" {
+  description = "Desired number of renderer instances. Setting to 0 disables the service and target group."
+  type        = number
+  default     = 1
+}
 
 #### PIRANA VARIABLES ####
 
@@ -292,4 +307,9 @@ variable "pirana_task_env_vars" {
   description = "An object consisting of key value pairs for environment variables to be passed to the pirana ECS task. Format is {VARIABLE_NAME = 'VALUE'} "
   type        = any
   default     = {}
+}
+variable "pirana_desired_count" {
+  description = "Desired number of pirana instances. Setting to 0 disables the service and target group."
+  type        = number
+  default     = 1
 }

@@ -1,6 +1,6 @@
 # TODO: rds module
 # TODO maybe alb module
-
+# TODO: pipeline to automatically do tf docs and formatting
 
 module "ecs" {
   #todo: option to run within existing cluster
@@ -8,7 +8,7 @@ module "ecs" {
   source                     = "./modules/ecs"
   deployment_name            = var.deployment_name
   container_insights_setting = var.container_insights_setting
-  secrets_allowed_arns       = [var.docker_hub_secrets_arn, var.db_credentials_secret_arn]
+  secrets_allowed_arns       = compact([var.docker_hub_secrets_arn, var.db_credentials_secret_arn])
   enable_execute_command     = var.enable_execute_command
 }
 
@@ -22,6 +22,7 @@ module "efs" {
 }
 
 module "lambda" {
+  #TODO: update python code, particularly to make it an env var for db name to set up.  - lookup on the value from db_env_vars if exists? otherwise dashboard
   source = "./modules/efs_setup"
   count  = var.set_up_efs ? 1 : 0
 
@@ -30,7 +31,7 @@ module "lambda" {
   deployment_name        = var.deployment_name
   efs_security_group_id  = module.efs.efs_security_group.id
 
-  depends_on = [module.efs.efs_mount_target_ids] #forcing this module to wait for mount points to become ready
+  depends_on = [module.efs.efs_mount_target_ids] #forcing this module to wait for mount points to become ready TODO: check if this works
 }
 
 
@@ -66,6 +67,7 @@ module "dashboard" {
   alb_listener_internal_arn   = var.dashboard_alb_listener_internal_arn
   internal_alb_sg_id          = var.dashboard_internal_alb_sg_id
   dashboard_private_domain    = var.dashboard_private_domain
+  desired_count               = var.dashboard_desired_count
 }
 
 
@@ -73,7 +75,7 @@ module "scheduler" {
   source = "./modules/scheduler"
   count  = var.create_scheduler ? 1 : 0
 
-  alb_listener_arn = coalesce(var.scheduler_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
+  alb_listener_arn = coalesce(var.scheduler_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn, "none")
   application_subnet_ids      = var.application_subnet_ids
   aws_ecs_cluster_id          = module.ecs.ecs_cluster.id
   dashboard_efs_id            = module.efs.efs_file_system.id
@@ -93,13 +95,14 @@ module "scheduler" {
   alb_sg_id                   = coalesce(var.scheduler_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
   enable_execute_command      = var.enable_execute_command
   internal_networking_enabled = var.dashboard_internal_networking_enabled
+  desired_count               = var.scheduler_desired_count
 }
 
 module "renderer" {
   source = "./modules/renderer"
   count  = var.create_renderer ? 1 : 0
 
-  alb_listener_arn        = coalesce(var.renderer_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
+  alb_listener_arn        = coalesce(var.renderer_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn, "none")
   application_subnet_ids  = var.application_subnet_ids
   aws_ecs_cluster_id      = module.ecs.ecs_cluster.id
   deployment_name         = var.deployment_name
@@ -115,13 +118,14 @@ module "renderer" {
   alb_sg_id               = coalesce(var.renderer_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
   enable_execute_command  = var.enable_execute_command
   internal_networking_enabled = var.dashboard_internal_networking_enabled
+  desired_count           = var.renderer_desired_count
 }
 
 module "pirana" {
   source = "./modules/pirana"
   count  = var.create_pirana ? 1 : 0
 
-  alb_listener_arn       = coalesce(var.pirana_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn)
+  alb_listener_arn       = coalesce(var.pirana_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn, "none")
   application_subnet_ids = var.application_subnet_ids
   aws_ecs_cluster_id     = module.ecs.ecs_cluster.id
   deployment_name        = var.deployment_name
@@ -136,4 +140,5 @@ module "pirana" {
   task_env_vars          = var.pirana_task_env_vars
   alb_sg_id              = coalesce(var.pirana_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
   enable_execute_command = var.enable_execute_command
+  desired_count          = var.pirana_desired_count
 }

@@ -1,17 +1,17 @@
 output "task_definition" {
-  value = aws_ecs_task_definition.pirana
+  value = try(aws_ecs_task_definition.pirana[0], null)
 }
 
 output "service" {
-  value = aws_ecs_service.pirana
+  value = try(aws_ecs_service.pirana[0], null)
 }
 
 output "target_group" {
-  value = aws_lb_target_group.pirana
+  value = try(aws_lb_target_group.pirana[0], null)
 }
 
 output "listener_rule" {
-  value = aws_lb_listener_rule.pirana
+  value = try(aws_lb_listener_rule.pirana[0], null)
 }
 
 output "main_security_group" {

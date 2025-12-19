@@ -7,11 +7,11 @@ output "external_target_group" {
 }
 
 output "task_definition" {
-  value = aws_ecs_task_definition.dashboard
+  value = try(aws_ecs_task_definition.dashboard[0], null)
 }
 
-output "service" {
-  value = aws_ecs_service.dashboard
+output "ecs_service" {
+  value = try(aws_ecs_service.dashboard[0], null)
 }
 
 output "external_listener_rule" {

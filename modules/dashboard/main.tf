@@ -6,7 +6,7 @@ data "aws_subnet" "private_subnet" {
 
 locals {
   env_variables      = [for k, v in var.task_env_vars : { name = k, value = v } if v != null ]
-  database_variables = [for k, v in var.database_env_vars : { name = k, value = v } if v != null ]
+  database_variables = try([for k, v in var.database_env_vars : { name = k, value = v } if v != null ], [])
 
   internal_lb = var.internal_networking_enabled ? {
     internal = {
@@ -42,7 +42,9 @@ locals {
   ] : null
 }
 
+
 resource "aws_ecs_task_definition" "dashboard" {
+  count = var.desired_count > 0 ? 1 : 0
   family = "${var.deployment_name}-dashboard"
   container_definitions = jsonencode([{
     name      = "dashboard"
@@ -190,18 +192,16 @@ resource "aws_cloudwatch_log_group" "dashboard" {
 
 
 resource "aws_ecs_service" "dashboard" {
+  count = var.desired_count > 0 ? 1 : 0
+
   name                              = "dashboard"
   cluster                           = var.aws_ecs_cluster_id
-  task_definition                   = aws_ecs_task_definition.dashboard.arn
-  desired_count                     = 1
+  task_definition                   = aws_ecs_task_definition.dashboard[0].arn
+  desired_count                     = var.desired_count
   launch_type                       = "FARGATE"
   platform_version                  = "1.4.0"
   health_check_grace_period_seconds = 80
   enable_execute_command            = var.enable_execute_command
-
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
 
   network_configuration {
     subnets          = var.application_subnet_ids
@@ -222,7 +222,8 @@ resource "aws_ecs_service" "dashboard" {
 
 
 resource "aws_lb_target_group" "dashboard" {
-  for_each    = local.load_balancers
+  for_each    = var.desired_count > 0 ? local.load_balancers : {}
+
   name        = "${var.deployment_name}-${each.key}"
   port        = each.value.port
   protocol    = each.value.protocol
@@ -242,7 +243,8 @@ resource "aws_lb_target_group" "dashboard" {
 
 
 resource "aws_lb_listener_rule" "dashboard" {
-  for_each     = local.load_balancers
+  for_each    = var.desired_count > 0 ? local.load_balancers : {}
+
   listener_arn = each.value.listener
 
   action {

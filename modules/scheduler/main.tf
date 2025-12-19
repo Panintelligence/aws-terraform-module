@@ -7,7 +7,7 @@ data "aws_subnet" "private_subnet" {
 
 locals {
   env_variables      = [for k, v in var.task_env_vars : { name = k, value = v } if v != null ]
-  database_variables = [for k, v in var.database_env_vars : { name = k, value = v } if v != null ]
+  database_variables = try([for k, v in var.database_env_vars : { name = k, value = v } if v != null ], [])
   db_secret = var.db_credentials_secret_arn != null ? [
     {
       name      = "PI_DB_USERNAME"
@@ -22,6 +22,7 @@ locals {
 
 
 resource "aws_ecs_task_definition" "scheduler" {
+  count  = var.desired_count > 0 ? 1 : 0
   family = "${var.deployment_name}-scheduler"
   container_definitions = jsonencode([{
     name      = "scheduler"
@@ -35,7 +36,7 @@ resource "aws_ecs_task_definition" "scheduler" {
     portMappings = [{
       containerPort = 9917
       hostPort      = 9917
-      appProtocol   = "http",
+      appProtocol   = "http"
       protocol      = "tcp"
       name          = "scheduler"
     }]
@@ -44,12 +45,12 @@ resource "aws_ecs_task_definition" "scheduler" {
     secrets     = local.db_secret
 
     mountPoints = [{
-      containerPath = "/var/panintelligence/Dashboard/keys",
+      containerPath = "/var/panintelligence/Dashboard/keys"
       sourceVolume  = "keys"
     }]
 
     LogConfiguration = {
-      logDriver = "awslogs",
+      logDriver = "awslogs"
       options = {
         awslogs-group         = "/aws/ecs/${var.deployment_name}-scheduler"
         awslogs-region        = data.aws_region.current.name
@@ -80,17 +81,14 @@ resource "aws_cloudwatch_log_group" "scheduler" {
 }
 
 resource "aws_ecs_service" "scheduler" {
+  count = var.desired_count > 0 ? 1 : 0
   name                   = "scheduler"
   cluster                = var.aws_ecs_cluster_id
-  task_definition        = aws_ecs_task_definition.scheduler.arn
-  desired_count          = 1
+  task_definition        = aws_ecs_task_definition.scheduler[0].arn
+  desired_count          = var.desired_count
   launch_type            = "FARGATE"
   platform_version       = "1.4.0"
   enable_execute_command = var.enable_execute_command
-
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
 
   network_configuration {
     subnets          = var.application_subnet_ids
@@ -99,7 +97,7 @@ resource "aws_ecs_service" "scheduler" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.scheduler.arn
+    target_group_arn = aws_lb_target_group.scheduler[0].arn
     container_name   = "scheduler"
     container_port   = 9917
   }
@@ -107,6 +105,7 @@ resource "aws_ecs_service" "scheduler" {
 
 
 resource "aws_lb_target_group" "scheduler" {
+  count = var.desired_count > 0 ? 1 : 0
   name        = "${var.deployment_name}-scheduler"
   port        = 9917
   protocol    = "HTTP"
@@ -126,11 +125,12 @@ resource "aws_lb_target_group" "scheduler" {
 
 
 resource "aws_lb_listener_rule" "scheduler" {
+  count = var.desired_count > 0 ? 1 : 0
   listener_arn = var.alb_listener_arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.scheduler.arn
+    target_group_arn = aws_lb_target_group.scheduler[0].arn
   }
 
   condition {

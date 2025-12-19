@@ -60,3 +60,6 @@ variable "db_credentials_secret_arn" {
 variable "internal_networking_enabled" {
   type = bool
 }
+variable "desired_count" {
+  type = number
+}

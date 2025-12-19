@@ -76,3 +76,7 @@ variable "external_networking_enabled" {
 variable "db_credentials_secret_arn" {
   type = string
 }
+
+variable "desired_count" {
+  type = number
+}

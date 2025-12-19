@@ -9,6 +9,7 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "renderer" {
+  count = var.desired_count > 0 ? 1 : 0
   family = "${var.deployment_name}-renderer"
   container_definitions = jsonencode([{
     name      = "renderer"
@@ -22,7 +23,7 @@ resource "aws_ecs_task_definition" "renderer" {
     portMappings = [{
       containerPort = 9915
       hostPort      = 9915
-      appProtocol   = "http",
+      appProtocol   = "http"
       protocol      = "tcp"
       name          = "renderer"
     }]
@@ -30,7 +31,7 @@ resource "aws_ecs_task_definition" "renderer" {
     environment = local.env_variables
 
     LogConfiguration = {
-      logDriver = "awslogs",
+      logDriver = "awslogs"
       options = {
         awslogs-group         = "/aws/ecs/${var.deployment_name}-renderer"
         awslogs-region        = data.aws_region.current.name
@@ -54,17 +55,15 @@ resource "aws_cloudwatch_log_group" "renderer" {
 
 
 resource "aws_ecs_service" "renderer" {
+  count = var.desired_count > 0 ? 1 : 0
+
   name                   = "renderer"
   cluster                = var.aws_ecs_cluster_id
-  task_definition        = aws_ecs_task_definition.renderer.arn
-  desired_count          = 1
+  task_definition        = aws_ecs_task_definition.renderer[0].arn
+  desired_count          = var.desired_count
   launch_type            = "FARGATE"
   platform_version       = "1.4.0"
   enable_execute_command = var.enable_execute_command
-
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
 
   network_configuration {
     subnets          = var.application_subnet_ids
@@ -73,7 +72,7 @@ resource "aws_ecs_service" "renderer" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.renderer.arn
+    target_group_arn = aws_lb_target_group.renderer[0].arn
     container_name   = "renderer"
     container_port   = 9915
   }
@@ -81,6 +80,8 @@ resource "aws_ecs_service" "renderer" {
 
 
 resource "aws_lb_target_group" "renderer" {
+  count = var.desired_count > 0 ? 1 : 0
+
   name        = "${var.deployment_name}-renderer"
   port        = 9915
   protocol    = "HTTP"
@@ -100,11 +101,13 @@ resource "aws_lb_target_group" "renderer" {
 
 
 resource "aws_lb_listener_rule" "renderer" {
+  count = var.desired_count > 0 ? 1 : 0
+
   listener_arn = var.alb_listener_arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.renderer.arn
+    target_group_arn = aws_lb_target_group.renderer[0].arn
   }
 
   condition {

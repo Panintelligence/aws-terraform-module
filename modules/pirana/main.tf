@@ -9,6 +9,8 @@ locals {
 }
 
 resource "aws_ecs_task_definition" "pirana" {
+  count = var.desired_count > 0 ? 1 : 0
+
   family = "${var.deployment_name}-pirana"
   container_definitions = jsonencode([{
     name      = "pirana"
@@ -22,7 +24,7 @@ resource "aws_ecs_task_definition" "pirana" {
     portMappings = [{
       containerPort = 9918
       hostPort      = 9918
-      appProtocol   = "http",
+      appProtocol   = "http"
       protocol      = "tcp"
       name          = "pirana"
     }]
@@ -30,7 +32,7 @@ resource "aws_ecs_task_definition" "pirana" {
     environment = local.env_variables
 
     LogConfiguration = {
-      logDriver = "awslogs",
+      logDriver = "awslogs"
       options = {
         awslogs-group         = "/aws/ecs/${var.deployment_name}-pirana"
         awslogs-region        = data.aws_region.current.name
@@ -54,17 +56,15 @@ resource "aws_cloudwatch_log_group" "pirana" {
 
 
 resource "aws_ecs_service" "pirana" {
+  count = var.desired_count > 0 ? 1 : 0
+
   name                   = "pirana"
   cluster                = var.aws_ecs_cluster_id
-  task_definition        = aws_ecs_task_definition.pirana.arn
-  desired_count          = 1
+  task_definition        = aws_ecs_task_definition.pirana[0].arn
+  desired_count          = var.desired_count
   launch_type            = "FARGATE"
   platform_version       = "1.4.0"
   enable_execute_command = var.enable_execute_command
-
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
 
   network_configuration {
     subnets          = var.application_subnet_ids
@@ -73,13 +73,15 @@ resource "aws_ecs_service" "pirana" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.pirana.arn
+    target_group_arn = aws_lb_target_group.pirana[0].arn
     container_name   = "pirana"
     container_port   = 9918
   }
 }
 
 resource "aws_lb_target_group" "pirana" {
+  count = var.desired_count > 0 ? 1 : 0
+
   name        = "${var.deployment_name}-pirana"
   port        = 9918
   protocol    = "HTTP"
@@ -99,11 +101,13 @@ resource "aws_lb_target_group" "pirana" {
 
 
 resource "aws_lb_listener_rule" "pirana" {
+  count = var.desired_count > 0 ? 1 : 0
+
   listener_arn = var.alb_listener_arn
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.pirana.arn
+    target_group_arn = aws_lb_target_group.pirana[0].arn
   }
 
   condition {

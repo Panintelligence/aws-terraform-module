@@ -262,6 +262,7 @@ module "pi" {
     PI_DB_SCHEMA_NAME = "dashboard"
     PI_DB_USERNAME    = module.rds-aurora.cluster_master_username
   }
+  #TODO: renderer dashboard url, scheduler dashboard url
   docker_hub_secrets_arn = var.docker_secret_arn
   dashboard_internal_alb_sg_id     = module.private_alb.security_group_id
   dashboard_external_alb_sg_id     = module.public_alb.security_group_id
