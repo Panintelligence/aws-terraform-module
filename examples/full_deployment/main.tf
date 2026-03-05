@@ -5,6 +5,7 @@ locals {
   pirana_private_domain    = "pirana.${var.private_domain_name}"
   renderer_private_domain  = "renderer.${var.private_domain_name}"
   scheduler_private_domain = "scheduler.${var.private_domain_name}"
+  qdrant_private_domain    = "qdrant.${var.private_domain_name}"
 }
 
 #### YOUR ROUTE 53 ZONE #####
@@ -254,6 +255,7 @@ module "pi" {
     PAN_RENDERER_URL          = "http://${local.renderer_private_domain}"
     PAN_SCHEDULER_URL         = "http://${local.scheduler_private_domain}"
     PI_DB_IS_MYSQL            = "true"
+    PI_VECTOR_DB_URL          = "http://${local.qdrant_private_domain}"
   }
   database_env_vars = {
     PI_DB_HOST        = module.rds-aurora.cluster_endpoint
@@ -277,4 +279,6 @@ module "pi" {
   pirana_private_domain   = local.pirana_private_domain
 
   renderer_private_domain   = local.renderer_private_domain
+
+  qdrant_private_domain = local.qdrant_private_domain
 }

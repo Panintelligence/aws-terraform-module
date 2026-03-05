@@ -42,8 +42,7 @@ resource "aws_ecs_task_definition" "pirana" {
   }])
 
   network_mode = "awsvpc"
-  requires_compatibilities = [
-  "FARGATE"]
+  requires_compatibilities = ["FARGATE"]
   memory             = var.pirana_memory
   cpu                = var.pirana_cpu
   execution_role_arn = var.execution_role_arn

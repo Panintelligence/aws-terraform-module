@@ -313,3 +313,49 @@ variable "pirana_desired_count" {
   type        = number
   default     = 1
 }
+
+
+
+
+############ QDRANT VARIABLES ############
+
+variable "create_qdrant" {
+  description = "Create qdrant resources"
+  type = bool
+  default = true
+}
+variable "qdrant_alb_listener_arn" {
+  description = "ARN of the ALB listener for the qdrant ECS service, for which a rule will be created, if different from the dashboard. Using a private ALB is recommended"
+  type = string
+  default = null
+}
+variable "qdrant_desired_count" {
+  description = "Desired number of qdrant instances"
+  type = number
+  default = 1
+}
+variable "qdrant_image" {
+  description = "The image to use for the qdrant container"
+  type = string
+  default = "qdrant/qdrant:latest"
+}
+variable "qdrant_cpu" {
+  description = "The cpu to allocate to the qdrant container"
+  type = number
+  default = 1024
+}
+variable "qdrant_memory" {
+  description = "The memory to allocat to the qdrant container"
+  type = number
+  default = 4096
+}
+variable "qdrant_private_domain" {
+  description = "Private domain for the qdrant ECS service networking. Must be resolvable from within the VPC"
+  type        = string
+  default     = null
+}
+variable "qdrant_task_env_vars" {
+  description = "An object consisting of key value pairs for environment variables to be passed to the qdrant ECS task. Format is {VARIABLE_NAME = 'VALUE'} "
+  type        = any
+  default     = {}
+}

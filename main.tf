@@ -142,3 +142,26 @@ module "pirana" {
   enable_execute_command = var.enable_execute_command
   desired_count          = var.pirana_desired_count
 }
+
+
+
+module "ai_resource" {
+  source = "./modules/ai_resources"
+  count = var.create_qdrant ? 1 : 0
+
+  alb_listener_arn = coalesce(var.qdrant_alb_listener_arn, var.dashboard_alb_listener_internal_arn, var.dashboard_alb_listener_external_arn, "none")
+  alb_sg_id = coalesce(var.pirana_alb_sg_id, var.dashboard_internal_alb_sg_id, var.dashboard_external_alb_sg_id)
+  application_subnet_ids = var.application_subnet_ids
+  aws_ecs_cluster_id = module.ecs.ecs_cluster.id
+  desired_count =  var.qdrant_desired_count
+  docker_image = var.qdrant_image
+  enable_execute_command = var.enable_execute_command
+  execution_role_arn = module.ecs.ecs_task_execution_role.arn
+  qdrant_cpu = var.qdrant_cpu
+  qdrant_memory = var.qdrant_memory
+  qdrant_private_domain = var.qdrant_private_domain
+  task_env_vars = var.qdrant_task_env_vars
+  task_role_arn = module.ecs.ecs_task_role.arn
+  deployment_name = var.deployment_name
+}
+
