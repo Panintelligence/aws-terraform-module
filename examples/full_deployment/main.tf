@@ -178,6 +178,11 @@ module "private_alb" {
       type    = "A"
       zone_id = aws_route53_zone.local.zone_id
     }
+    qdrant = {
+      name    = qdrant
+      type    = "A"
+      zone_id = aws_route53_zone.local.zone_id
+    }
   }
 }
 
